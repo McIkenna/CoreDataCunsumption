@@ -7,48 +7,68 @@
 
 import UIKit
 
-class ViewController: UIViewController, UITableViewDataSource {
+class ViewController: UITableViewController{
+ 
   
     
+    var gamer : [GamerPower] = []
+    let persisitent = PersistentStorage.shared
+    let controller = ControllerManager.shared
     
-    @IBOutlet weak var myTableView : UITableView!
-    
-    var gameData : ControllerManager = ControllerManager()
-    var game : [Game] = []
 
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
-        setUp()
-        loadData()
+        setup()
+      
       
     }
     
-    func setUp(){
-        myTableView.dataSource = self
-        myTableView.register(UITableViewCell.self, forCellReuseIdentifier: "GameCell")
-        
-    }
-
-    func loadData(){
-        gameData.getData(completionHandler: {_game in
-                    self.game = _game
-
-                DispatchQueue.main.async {
-                    self.myTableView.reloadData()
+    func setup(){
+        let url = "https://www.gamerpower.com/api/giveaways"
+        controller.request(url){[weak self] (result) in
+            switch result {
+            case .success(let data):
+                do{
+                    guard let jsonData = try JSONSerialization.jsonObject(with: data, options: []) as? [[String: Any]] else {return}
+                    let gamers: [GamerPower] = jsonData.compactMap{
+                    guard
+                        let strongSelf = self,
+                        let title = $0["title"] as? String,
+                        let worth = $0["worth"] as? String
+                        else{return nil}
+                        let gmer = GamerPower(context: strongSelf.persisitent.context)
+                        gmer.title = title
+                        gmer.worth = worth
+                        return gmer
                 }
-        })
+                    self?.gamer = gamers
+                    DispatchQueue.main.async {
+                        self?.persisitent.saveContext()
+                        self?.tableView.reloadData()
+                    }
+            }
+                catch{
+                    print(error)
+                }
+            case .failure(let error):
+                print(error)
+            }
+        }
+    }
+ 
+
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return self.gamer.count
     }
     
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return self.game.count
-    }
-    
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-       let cell = tableView.dequeueReusableCell(withIdentifier: "GameCell", for: indexPath)
-        let gameObj = self.game[indexPath.row]
-        cell.textLabel?.text = gameObj.title
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = UITableViewCell()
+        let gamerObj = self.gamer[indexPath.row]
+        cell.textLabel?.text = gamerObj.title
         return cell
     }
+    
+   
 }
 

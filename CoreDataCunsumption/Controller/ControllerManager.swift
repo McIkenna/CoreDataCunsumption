@@ -8,21 +8,23 @@
 import Foundation
 
 struct ControllerManager {
-    func getData (completionHandler:@escaping ([Game]) -> Void){
-        let gamePowerUrl = URL(string: "https://www.gamerpower.com/api/giveaways")!
-       let task = URLSession.shared.dataTask(with: gamePowerUrl, completionHandler: {(data, response, error) in
-           if error != nil || data == nil {
-               print("Error---- \(String(describing: error?.localizedDescription))")
-           }
-                do{
-                    let result = try JSONDecoder().decode([Game].self, from: data!)
-                    completionHandler(result)
-                }
-                catch let error{
-                    print(error)
-                }
-       
-        })
+    private init(){
+    }
+    static let shared = ControllerManager()
+    
+    func request(_ urlPath: String, completionHandler: @escaping (Result<Data, NSError>) -> Void){
+        let url = URL(string: urlPath)!
+        
+        let session = URLSession.shared
+        let task = session.dataTask(with: url){
+            (data, _, error) in
+            
+            if let parsedError = error{
+                completionHandler(.failure(parsedError as NSError))
+            }else if let parsedData = data {
+                completionHandler(.success(parsedData))
+            }
+        }
         task.resume()
     }
 }
