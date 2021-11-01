@@ -14,7 +14,6 @@ struct ControllerManager {
     
     func request(_ urlPath: String, completionHandler: @escaping (Result<Data, NSError>) -> Void){
         let url = URL(string: urlPath)!
-        
         let session = URLSession.shared
         let task = session.dataTask(with: url){
             (data, _, error) in

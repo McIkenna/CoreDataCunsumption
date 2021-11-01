@@ -65,7 +65,9 @@ class ViewController: UITableViewController{
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = UITableViewCell()
         let gamerObj = self.gamer[indexPath.row]
-        cell.textLabel?.text = gamerObj.title
+        cell.textLabel?.text = gamerObj.title + " ------> " + gamerObj.worth
+        cell.textLabel?.numberOfLines = 0
+        cell.textLabel?.lineBreakMode = .byWordWrapping
         return cell
     }
     
